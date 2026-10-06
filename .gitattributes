@@ -1,0 +1,24 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Visual Basic & .NET Source files
+*.vb text diff=csharp
+*.resx text
+*.config text
+*.sln text eol=crlf
+*.vbproj text
+*.json text
+*.md text
+*.txt text
+
+# Windows Batch scripts require CRLF line endings
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binary files
+*.mdb binary
+*.exe binary
+*.dll binary
+*.ico binary
+*.png binary
+*.jpg binary

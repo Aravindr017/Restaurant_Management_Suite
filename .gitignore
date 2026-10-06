@@ -1,0 +1,84 @@
+## ==============================================================================
+## Git Ignore for Restaurant Management Suite (VB.NET / Windows Forms / VS)
+## ==============================================================================
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Visual Studio files and folders
+.vs/
+.vscode/*
+!.vscode/tasks.json
+!.vscode/launch.json
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Aa]rchive/
+[Aa]rm/
+[Aa]rm64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio project artifacts
+*.cache
+*.FileListAbsolute.txt
+*.ilk
+*.meta
+*.obj
+*.iobj
+*.pch
+*.pdb
+*.ipdb
+*.pgc
+*.pgd
+*.rsp
+*.sbr
+*.tlb
+*.tli
+*.tlh
+*.tmp
+*.tmp_proj
+*_i.c
+*_p.c
+*_h.h
+*.manifest
+*.res
+*.identity
+*.load
+*.refresh
+*.vstemplate
+*.visualstudio
+
+# Access lock files (temporary lock files created when opening .mdb / .accdb)
+*.ldb
+*.laccdb
+
+# Visual Basic specific files
+*.vbproj.user
+
+# Operating System Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+[Dd]esktop.ini
+
+# Backup and temporary files
+*.bak
+*.orig
+*~

@@ -1,0 +1,36 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build Restaurant Management (Default)",
+      "type": "shell",
+      "command": "C:\\Windows\\Microsoft.NET\\Framework\\v4.0.30319\\MSBuild.exe",
+      "args": [
+        "${workspaceFolder}\\RestaurantManagement\\RestaurantManagement.vbproj",
+        "/p:Configuration=Debug",
+        "/p:Platform=AnyCPU",
+        "/v:m"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": "$msCompile",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Run Restaurant Management",
+      "type": "shell",
+      "command": "${workspaceFolder}\\RestaurantManagement\\bin\\Debug\\RestaurantManagement.exe",
+      "dependsOn": "Build Restaurant Management (Default)",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    }
+  ]
+}

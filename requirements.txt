@@ -1,0 +1,45 @@
+# ==============================================================================
+# Restaurant Management Suite (v4 Recursion) - Prerequisites & System Requirements
+# ==============================================================================
+# This desktop software is built on Microsoft .NET Framework (VB.NET & WinForms)
+# with a Microsoft Access (Jet OLEDB) database backend.
+# 
+# The application does not require external Python packages or third-party NuGet
+# libraries; all core runtime and assembly dependencies are part of the Microsoft
+# .NET Framework standard library and Windows subsystem.
+# ==============================================================================
+
+# Operating System:
+# - Microsoft Windows 7 / 8.1 / 10 / 11 (32-bit or 64-bit)
+
+# Runtime Framework:
+# - Microsoft .NET Framework >= 4.7.2
+#   (Pre-installed on Windows 10 version 1803+ and all Windows 11 releases)
+#   Download: https://dotnet.microsoft.com/download/dotnet-framework/net472
+
+# Database Engine / Provider:
+# - Microsoft.Jet.OLEDB.4.0 (32-bit OLEDB Provider built into Windows WOW64)
+#   (Note: Project is configured with <Prefer32Bit>true</Prefer32Bit> for native compatibility)
+
+# Build & Compilation Tools (any one of the following):
+# - Microsoft MSBuild Engine (v4.0.30319 or higher)
+#   (Included with .NET Framework at C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild.exe)
+# - Microsoft Visual Studio 2017 / 2019 / 2022 (Community, Professional, or Enterprise)
+#   Workload: .NET desktop development
+# - Microsoft Visual Studio Build Tools (VS 2017/2019/2022)
+
+# Development Tools / Editors (Optional):
+# - Visual Studio Code (with C# Dev Kit or OmniSharp / MSBuild tasks)
+# - Git >= 2.20
+
+# Core .NET Assemblies Referenced (Included in .NET Framework BCL):
+# - System (4.0.0.0)
+# - System.Data (4.0.0.0)
+# - System.Deployment (4.0.0.0)
+# - System.Drawing (4.0.0.0)
+# - System.Windows.Forms (4.0.0.0)
+# - System.Xml (4.0.0.0)
+# - System.Core (4.0.0.0)
+# - System.Xml.Linq (4.0.0.0)
+# - System.Data.DataSetExtensions (4.0.0.0)
+# - System.Net.Http (4.0.0.0)

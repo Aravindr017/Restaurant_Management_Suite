@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch Restaurant Management (.NET Framework)",
+      "type": "clr",
+      "request": "launch",
+      "preLaunchTask": "Build Restaurant Management (Default)",
+      "program": "${workspaceFolder}/RestaurantManagement/bin/Debug/RestaurantManagement.exe",
+      "args": [],
+      "cwd": "${workspaceFolder}/RestaurantManagement/bin/Debug",
+      "stopAtEntry": false,
+      "console": "internalConsole"
+    }
+  ]
+}
