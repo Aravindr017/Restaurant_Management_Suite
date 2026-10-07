@@ -21,12 +21,14 @@ Module ModMain
         Dim appDir As String = Application.StartupPath
         Dim directPath As String = Path.Combine(appDir, DatabaseFileName)
         If File.Exists(directPath) Then Return directPath
-        Dim parentDir As String = Directory.GetParent(appDir)?.FullName
-        If parentDir IsNot Nothing Then
+        Dim parentDirInfo As DirectoryInfo = Directory.GetParent(appDir)
+        If parentDirInfo IsNot Nothing Then
+            Dim parentDir As String = parentDirInfo.FullName
             Dim parentPath As String = Path.Combine(parentDir, DatabaseFileName)
             If File.Exists(parentPath) Then Return parentPath
-            Dim grandParentDir As String = Directory.GetParent(parentDir)?.FullName
-            If grandParentDir IsNot Nothing Then
+            Dim grandParentDirInfo As DirectoryInfo = Directory.GetParent(parentDir)
+            If grandParentDirInfo IsNot Nothing Then
+                Dim grandParentDir As String = grandParentDirInfo.FullName
                 Dim grandParentPath As String = Path.Combine(grandParentDir, DatabaseFileName)
                 If File.Exists(grandParentPath) Then Return grandParentPath
             End If

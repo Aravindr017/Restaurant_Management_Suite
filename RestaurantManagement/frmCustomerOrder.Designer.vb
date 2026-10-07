@@ -351,7 +351,6 @@ Partial Class frmCustomerOrder
         Me.txtCustomization.Name = "txtCustomization"
         Me.txtCustomization.Size = New System.Drawing.Size(622, 24)
         Me.txtCustomization.TabIndex = 7
-        Me.txtCustomization.PlaceholderText = "e.g. Extra spicy, No onion, Less oil, Extra gravy, Jain style..."
 
         ' grpCart (right panel)
         Me.grpCart.Controls.Add(Me.pnlCheckout)
@@ -413,7 +412,6 @@ Partial Class frmCustomerOrder
         Me.txtCustomerName.Name = "txtCustomerName"
         Me.txtCustomerName.Size = New System.Drawing.Size(295, 24)
         Me.txtCustomerName.TabIndex = 3
-        Me.txtCustomerName.PlaceholderText = "Enter your name (optional)"
 
         ' btnRemoveFromCart
         Me.btnRemoveFromCart.Anchor = System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left

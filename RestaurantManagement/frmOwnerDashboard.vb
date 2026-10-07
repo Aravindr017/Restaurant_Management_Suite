@@ -5,7 +5,8 @@ Public Class frmOwnerDashboard
 
     Private Sub frmOwnerDashboard_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         Me.Text = "Spice Garden - Owner Management Control Panel"
-        lblOwnerTitle.Text = "Spice Garden Restaurant  |  Owner Portal: " & CurrentUserFullName
+        lblTitle.Text = "Spice Garden - Owner Management Control Panel"
+        lblOwnerInfo.Text = "Logged In: " & CurrentUserFullName & " | Spice Garden, Chennai"
         LoadTables()
         LoadWaiters()
         LoadMenu()
@@ -101,7 +102,7 @@ Public Class frmOwnerDashboard
         End If
 
         Dim tableID As Integer = Convert.ToInt32(dgvTables.SelectedRows(0).Cells("TableID").Value)
-        Dim newStatus As String = cboTableStatus.SelectedItem?.ToString()
+        Dim newStatus As String = If(cboTableStatus.SelectedItem IsNot Nothing, cboTableStatus.SelectedItem.ToString(), "")
         If String.IsNullOrEmpty(newStatus) Then Return
 
         If DbConnect() Then
@@ -330,17 +331,18 @@ Public Class frmOwnerDashboard
         Try
             Dim row As DataGridViewRow = dgvMenu.SelectedRows(0)
             SelectedMenuItemID = Convert.ToInt32(row.Cells("ItemID").Value)
-            txtItemName.Text = row.Cells("ItemName").Value?.ToString()
+            txtItemName.Text = If(row.Cells("ItemName").Value IsNot Nothing, row.Cells("ItemName").Value.ToString(), "")
             txtPrice.Text = Convert.ToDouble(row.Cells("Price").Value).ToString("N0")
-            txtPrepTime.Text = row.Cells("PrepTimeMinutes").Value?.ToString()
-            txtItemDescription.Text = row.Cells("Description").Value?.ToString()
+            txtPrepTime.Text = If(row.Cells("PrepTimeMinutes").Value IsNot Nothing, row.Cells("PrepTimeMinutes").Value.ToString(), "")
+            txtItemDescription.Text = If(row.Cells("Description").Value IsNot Nothing, row.Cells("Description").Value.ToString(), "")
             Dim ingVal As String = ""
             If dgvMenu.Columns.Contains("Ingredients") AndAlso row.Cells("Ingredients").Value IsNot Nothing Then
                 ingVal = row.Cells("Ingredients").Value.ToString()
             End If
             txtIngredients.Text = ingVal
-            If cboCategory.Items.Contains(row.Cells("Category").Value?.ToString()) Then
-                cboCategory.SelectedItem = row.Cells("Category").Value.ToString()
+            Dim catVal As String = If(row.Cells("Category").Value IsNot Nothing, row.Cells("Category").Value.ToString(), "")
+            If cboCategory.Items.Contains(catVal) Then
+                cboCategory.SelectedItem = catVal
             End If
             btnAddMenuItem.Text = "Update Dish (#" & SelectedMenuItemID & ")"
         Catch
@@ -418,11 +420,11 @@ Public Class frmOwnerDashboard
         If dgvCustomers.SelectedRows.Count = 0 Then Return
         Try
             Dim row As DataGridViewRow = dgvCustomers.SelectedRows(0)
-            txtCustName.Text = row.Cells("CustomerName").Value?.ToString()
-            txtCustPhone.Text = row.Cells("Phone").Value?.ToString()
-            txtCustEmail.Text = row.Cells("Email").Value?.ToString()
-            txtCustCity.Text = row.Cells("City").Value?.ToString()
-            txtCustNotes.Text = row.Cells("Notes").Value?.ToString()
+            txtCustName.Text = If(row.Cells("CustomerName").Value IsNot Nothing, row.Cells("CustomerName").Value.ToString(), "")
+            txtCustPhone.Text = If(row.Cells("Phone").Value IsNot Nothing, row.Cells("Phone").Value.ToString(), "")
+            txtCustEmail.Text = If(row.Cells("Email").Value IsNot Nothing, row.Cells("Email").Value.ToString(), "")
+            txtCustCity.Text = If(row.Cells("City").Value IsNot Nothing, row.Cells("City").Value.ToString(), "")
+            txtCustNotes.Text = If(row.Cells("Notes").Value IsNot Nothing, row.Cells("Notes").Value.ToString(), "")
         Catch
         End Try
     End Sub

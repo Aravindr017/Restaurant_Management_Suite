@@ -117,7 +117,7 @@ Public Class frmCustomerOrder
 
     Private Sub ShowRecipePanel(row As DataGridViewRow)
         Try
-            Dim itemName As String = row.Cells("ItemName").Value?.ToString()
+            Dim itemName As String = If(row.Cells("ItemName").Value IsNot Nothing, row.Cells("ItemName").Value.ToString(), "")
             Dim desc As String = ""
             Dim ingredients As String = ""
             Dim recipe As String = ""

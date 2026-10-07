@@ -444,7 +444,6 @@ Partial Class frmOwnerDashboard
         Me.txtIngredients.Name = "txtIngredients"
         Me.txtIngredients.Size = New System.Drawing.Size(480, 24)
         Me.txtIngredients.TabIndex = 11
-        Me.txtIngredients.PlaceholderText = "e.g. Chicken, Tomato, Cream, Ginger-Garlic..."
 
         ' btnAddMenuItem
         Me.btnAddMenuItem.FlatStyle = System.Windows.Forms.FlatStyle.System
@@ -695,7 +694,6 @@ Partial Class frmOwnerDashboard
         Me.txtCustNotes.Name = "txtCustNotes"
         Me.txtCustNotes.Size = New System.Drawing.Size(480, 24)
         Me.txtCustNotes.TabIndex = 9
-        Me.txtCustNotes.PlaceholderText = "e.g. Vegetarian, Less spicy, Nut allergy, Regular..."
 
         ' btnAddCustomer
         Me.btnAddCustomer.BackColor = System.Drawing.Color.FromArgb(33, 150, 83)
