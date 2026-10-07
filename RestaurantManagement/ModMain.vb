@@ -4,62 +4,42 @@ Imports System.Text
 Imports System.Windows.Forms
 
 Module ModMain
-    ' Database Path with dynamic location support (checks current directory and bin\Debug)
     Private DatabaseFileName As String = "RestaurantDB.mdb"
     Public cn As OleDbConnection
     Private ActiveConnectionString As String = ""
 
-    ' Global User Session State
     Public LogedIn As Boolean = False
     Public CurrentUserID As Integer = -1
     Public CurrentUserName As String = ""
     Public CurrentUserFullName As String = ""
-    Public CurrentUserRole As String = "" ' "Owner", "Waiter", "Customer"
-    Public UserAccessLevel As Integer = 99 ' 1: Owner, 2: Waiter, 99: Customer/Guest
+    Public CurrentUserRole As String = ""
+    Public UserAccessLevel As Integer = 99
     Public SelectedTableNumber As Integer = 1
     Public ActiveCustomerName As String = "Guest Table"
 
-    ''' <summary>
-    ''' Resolves the full path to the RestaurantDB.mdb file
-    ''' </summary>
     Private Function GetDatabaseFullPath() As String
         Dim appDir As String = Application.StartupPath
         Dim directPath As String = Path.Combine(appDir, DatabaseFileName)
-        If File.Exists(directPath) Then
-            Return directPath
-        End If
-
-        ' Check parent directories if running from bin\Debug
+        If File.Exists(directPath) Then Return directPath
         Dim parentDir As String = Directory.GetParent(appDir)?.FullName
         If parentDir IsNot Nothing Then
             Dim parentPath As String = Path.Combine(parentDir, DatabaseFileName)
             If File.Exists(parentPath) Then Return parentPath
-
             Dim grandParentDir As String = Directory.GetParent(parentDir)?.FullName
             If grandParentDir IsNot Nothing Then
                 Dim grandParentPath As String = Path.Combine(grandParentDir, DatabaseFileName)
                 If File.Exists(grandParentPath) Then Return grandParentPath
             End If
         End If
-
         Return directPath
     End Function
 
-    ''' <summary>
-    ''' Connects to the Microsoft Access database using Jet 4.0 or ACE OLEDB fallback
-    ''' </summary>
     Public Function DbConnect() As Boolean
         Try
-            If cn IsNot Nothing AndAlso cn.State = ConnectionState.Open Then
-                Return True
-            End If
-
+            If cn IsNot Nothing AndAlso cn.State = ConnectionState.Open Then Return True
             Dim dbFile As String = GetDatabaseFullPath()
-
-            ' Attempt Jet 4.0 (32-bit standard) first, then ACE 12.0 (64-bit compatible)
             Dim jetConnStr As String = "Provider=Microsoft.Jet.OLEDB.4.0;Data Source='" & dbFile & "';Persist Security Info=False;"
             Dim aceConnStr As String = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source='" & dbFile & "';Persist Security Info=False;"
-
             Try
                 cn = New OleDbConnection(jetConnStr)
                 cn.Open()
@@ -72,8 +52,7 @@ Module ModMain
                     ActiveConnectionString = aceConnStr
                     Return True
                 Catch exAce As Exception
-                    MessageBox.Show("Unable to open Restaurant database: " & vbCrLf & exAce.Message & vbCrLf &
-                                    "Checked path: " & dbFile, "Database Connection Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                    MessageBox.Show("Unable to open Restaurant database: " & vbCrLf & exAce.Message & vbCrLf & "Checked path: " & dbFile, "Database Connection Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
                     Return False
                 End Try
             End Try
@@ -83,89 +62,52 @@ Module ModMain
         End Try
     End Function
 
-    ''' <summary>
-    ''' Closes the active database connection safely
-    ''' </summary>
     Public Sub DbClose()
         Try
-            If cn IsNot Nothing AndAlso cn.State = ConnectionState.Open Then
-                cn.Close()
-            End If
+            If cn IsNot Nothing AndAlso cn.State = ConnectionState.Open Then cn.Close()
         Catch
         End Try
     End Sub
 
-    ''' <summary>
-    ''' Initializes database tables (tblStaff, tblTables, tblMenuItems, tblOrders, tblOrderItems)
-    ''' and seeds default data on first run.
-    ''' </summary>
     Public Sub InitializeDatabase()
         If Not DbConnect() Then Return
-
         Try
-            ' 1. tblStaff Table
-            ExecuteDdlSafe("CREATE TABLE tblStaff (" &
-                           "StaffID AUTOINCREMENT PRIMARY KEY, " &
-                           "UserName TEXT(50), " &
-                           "UnPassword TEXT(100), " &
-                           "AccessLevel INTEGER, " &
-                           "FullName TEXT(100), " &
-                           "Role TEXT(50), " &
-                           "Phone TEXT(50), " &
-                           "Salary CURRENCY)")
+            ExecuteDdlSafe("CREATE TABLE tblStaff (StaffID AUTOINCREMENT PRIMARY KEY, UserName TEXT(50), UnPassword TEXT(100), AccessLevel INTEGER, FullName TEXT(100), Role TEXT(50), Phone TEXT(50), Salary CURRENCY)")
+            ExecuteDdlSafe("CREATE TABLE tblTables (TableID AUTOINCREMENT PRIMARY KEY, TableNumber INTEGER, Capacity INTEGER, TableStatus TEXT(30), AssignedWaiterID INTEGER, AssignedWaiterName TEXT(100))")
+            ExecuteDdlSafe("CREATE TABLE tblMenuItems (ItemID AUTOINCREMENT PRIMARY KEY, ItemName TEXT(100), Category TEXT(50), Price CURRENCY, PrepTimeMinutes INTEGER, Description TEXT(255), Ingredients TEXT(255), Recipe TEXT(255))")
+            ExecuteDdlSafe("CREATE TABLE tblOrders (OrderID AUTOINCREMENT PRIMARY KEY, TableNumber INTEGER, CustomerName TEXT(100), WaiterID INTEGER, WaiterName TEXT(100), OrderStatus TEXT(30), OrderTime DATETIME, EstWaitMinutes INTEGER, TotalAmount CURRENCY, Notes TEXT(255))")
+            ExecuteDdlSafe("CREATE TABLE tblOrderItems (DetailID AUTOINCREMENT PRIMARY KEY, OrderID INTEGER, ItemID INTEGER, ItemName TEXT(100), Quantity INTEGER, UnitPrice CURRENCY, SubTotal CURRENCY, ItemStatus TEXT(30), Customization TEXT(255))")
+            ExecuteDdlSafe("CREATE TABLE tblCustomers (CustomerID AUTOINCREMENT PRIMARY KEY, CustomerName TEXT(100), Phone TEXT(50), Email TEXT(100), Address TEXT(255), City TEXT(100), VisitCount INTEGER, TotalSpent CURRENCY, RegisteredOn DATETIME, Notes TEXT(255))")
 
-            ' 2. tblTables Table
-            ExecuteDdlSafe("CREATE TABLE tblTables (" &
-                           "TableID AUTOINCREMENT PRIMARY KEY, " &
-                           "TableNumber INTEGER, " &
-                           "Capacity INTEGER, " &
-                           "TableStatus TEXT(30), " &
-                           "AssignedWaiterID INTEGER, " &
-                           "AssignedWaiterName TEXT(100))")
+            ' Upgrade existing DB schema (safe - ignored if columns already exist)
+            ExecuteDdlSafe("ALTER TABLE tblMenuItems ADD COLUMN Ingredients TEXT(255)")
+            ExecuteDdlSafe("ALTER TABLE tblMenuItems ADD COLUMN Recipe TEXT(255)")
+            ExecuteDdlSafe("ALTER TABLE tblOrderItems ADD COLUMN Customization TEXT(255)")
 
-            ' 3. tblMenuItems Table
-            ExecuteDdlSafe("CREATE TABLE tblMenuItems (" &
-                           "ItemID AUTOINCREMENT PRIMARY KEY, " &
-                           "ItemName TEXT(100), " &
-                           "Category TEXT(50), " &
-                           "Price CURRENCY, " &
-                           "PrepTimeMinutes INTEGER, " &
-                           "Description TEXT(255))")
-
-            ' 4. tblOrders Table
-            ExecuteDdlSafe("CREATE TABLE tblOrders (" &
-                           "OrderID AUTOINCREMENT PRIMARY KEY, " &
-                           "TableNumber INTEGER, " &
-                           "CustomerName TEXT(100), " &
-                           "WaiterID INTEGER, " &
-                           "WaiterName TEXT(100), " &
-                           "OrderStatus TEXT(30), " &
-                           "OrderTime DATETIME, " &
-                           "EstWaitMinutes INTEGER, " &
-                           "TotalAmount CURRENCY, " &
-                           "Notes TEXT(255))")
-
-            ' 5. tblOrderItems Table
-            ExecuteDdlSafe("CREATE TABLE tblOrderItems (" &
-                           "DetailID AUTOINCREMENT PRIMARY KEY, " &
-                           "OrderID INTEGER, " &
-                           "ItemID INTEGER, " &
-                           "ItemName TEXT(100), " &
-                           "Quantity INTEGER, " &
-                           "UnitPrice CURRENCY, " &
-                           "SubTotal CURRENCY, " &
-                           "ItemStatus TEXT(30))")
-
-            ' Seed default data if tblStaff is empty
             Dim checkCmd As New OleDbCommand("SELECT COUNT(*) FROM tblStaff", cn)
             Dim staffCount As Integer = Convert.ToInt32(checkCmd.ExecuteScalar())
+            If staffCount = 0 Then SeedStaffAndTables()
 
-            If staffCount = 0 Then
-                SeedDefaultData()
-            End If
+            ' Ensure customers table is populated with Indian sample data
+            Try
+                Dim custCheck As New OleDbCommand("SELECT COUNT(*) FROM tblCustomers", cn)
+                Dim custCount As Integer = Convert.ToInt32(custCheck.ExecuteScalar())
+                If custCount = 0 Then SeedCustomers()
+            Catch
+            End Try
 
+            ' Ensure menu items with ingredients & recipes are populated
+            Try
+                Dim menuCheck As New OleDbCommand("SELECT COUNT(*) FROM tblMenuItems", cn)
+                Dim menuCount As Integer = Convert.ToInt32(menuCheck.ExecuteScalar())
+                If menuCount = 0 Then
+                    SeedMenuItems()
+                Else
+                    SyncMenuRecipes()
+                End If
+            Catch
+            End Try
         Catch ex As Exception
-            ' Silent continue if tables exist
         Finally
             DbClose()
         End Try
@@ -176,67 +118,131 @@ Module ModMain
             Dim cmd As New OleDbCommand(sql, cn)
             cmd.ExecuteNonQuery()
         Catch
-            ' Already exists or schema already set
         End Try
     End Sub
 
-    ''' <summary>
-    ''' Populates the database with default owner, waiters, tables, and menu items
-    ''' </summary>
-    Private Sub SeedDefaultData()
+    Private Sub SeedStaffAndTables()
         Try
-            ' Default Staff (Owner & Waiters)
-            ' owner: admin123 -> Encrypted
-            ' waiter1, waiter2, waiter3: waiter123 -> Encrypted
             Dim encOwnerPw As String = Encrypt("admin123")
             Dim encWaiterPw As String = Encrypt("waiter123")
 
-            Dim insStaffSql As String = "INSERT INTO tblStaff (UserName, UnPassword, AccessLevel, FullName, Role, Phone, Salary) VALUES (@un, @pw, @acc, @fn, @ro, @ph, @sal)"
+            InsertStaffRecord("owner", encOwnerPw, 1, "Ramesh Agarwal (Owner)", "Owner", "+91-98765-43210", 120000)
+            InsertStaffRecord("waiter1", encWaiterPw, 2, "Suresh Kumar", "Waiter", "+91-98111-22334", 18000)
+            InsertStaffRecord("waiter2", encWaiterPw, 2, "Priya Nair", "Waiter", "+91-97222-33445", 18000)
+            InsertStaffRecord("waiter3", encWaiterPw, 2, "Arjun Singh", "Waiter", "+91-96333-44556", 18000)
 
-            InsertStaffRecord("owner", encOwnerPw, 1, "Marco Bellini (Owner)", "Owner", "555-0100", 65000)
-            InsertStaffRecord("waiter1", encWaiterPw, 2, "John Smith", "Waiter", "555-0101", 28000)
-            InsertStaffRecord("waiter2", encWaiterPw, 2, "Emily Davis", "Waiter", "555-0102", 28000)
-            InsertStaffRecord("waiter3", encWaiterPw, 2, "Carlos Mendez", "Waiter", "555-0103", 28000)
+            Dim w1 As Integer = GetStaffIDByUsername("waiter1")
+            Dim w2 As Integer = GetStaffIDByUsername("waiter2")
+            Dim w3 As Integer = GetStaffIDByUsername("waiter3")
 
-            ' Default Tables (Tables 1 - 6)
-            InsertTableRecord(1, 2, "Occupied", 2, "John Smith")
-            InsertTableRecord(2, 4, "Occupied", 2, "John Smith")
-            InsertTableRecord(3, 4, "Free", 3, "Emily Davis")
-            InsertTableRecord(4, 6, "Free", 3, "Emily Davis")
-            InsertTableRecord(5, 2, "Free", 4, "Carlos Mendez")
-            InsertTableRecord(6, 8, "Reserved", 4, "Carlos Mendez")
+            InsertTableRecord(1, 2, "Occupied", w1, "Suresh Kumar")
+            InsertTableRecord(2, 4, "Occupied", w1, "Suresh Kumar")
+            InsertTableRecord(3, 4, "Free", w2, "Priya Nair")
+            InsertTableRecord(4, 6, "Free", w2, "Priya Nair")
+            InsertTableRecord(5, 2, "Free", w3, "Arjun Singh")
+            InsertTableRecord(6, 8, "Reserved", w3, "Arjun Singh")
 
-            ' Default Menu Items with realistic prep times and pricing
-            InsertMenuItem("Garlic Butter Herb Bread", "Starters", 6.5, 8, "Warm artisan baguette with roasted garlic and fresh parsley butter")
-            InsertMenuItem("Crispy Salt & Pepper Calamari", "Starters", 12.0, 12, "Tender calamari with lime aioli and sea salt")
-            InsertMenuItem("Classic Bruschetta Pomodoro", "Starters", 8.5, 10, "Grilled ciabatta topped with heirloom tomatoes, basil, and balsamic glaze")
-            InsertMenuItem("Caprese Salad Skewers", "Starters", 9.0, 7, "Cherry tomatoes, fresh mozzarella, basil, and extra virgin olive oil")
-
-            InsertMenuItem("Grilled Prime Ribeye Steak (10oz)", "Mains", 28.5, 22, "Cooked to preference, served with truffle butter and mashed potatoes")
-            InsertMenuItem("Fettuccine Chicken Alfredo", "Mains", 18.0, 15, "Handcrafted pasta in creamy parmesan garlic alfredo sauce with chicken")
-            InsertMenuItem("Pan-Seared Atlantic Salmon", "Mains", 24.0, 18, "Crisp skin fillet served over wild asparagus and lemon beurre blanc")
-            InsertMenuItem("Wood-Fired Margherita Pizza", "Mains", 15.0, 14, "San Marzano tomatoes, fresh mozzarella fior di latte, and basil leaves")
-            InsertMenuItem("BBQ Bacon Angus Smash Burger", "Mains", 16.5, 15, "Double beef patties, smoked bacon, aged cheddar, and house fries")
-
-            InsertMenuItem("Traditional Italian Tiramisu", "Desserts", 9.0, 5, "Espresso soaked savoiardi layers with mascarpone and cocoa powder")
-            InsertMenuItem("Warm Molten Chocolate Lava Cake", "Desserts", 10.5, 12, "Gooey chocolate center served with Madagascar vanilla gelato")
-            InsertMenuItem("Classic New York Cheesecake", "Desserts", 8.0, 5, "Creamy cheesecake served with strawberry compote")
-
-            InsertMenuItem("Signature Berry Mojito (Mocktail)", "Beverages", 5.5, 3, "Fresh mint, blackberries, sparkling club soda, and cane sugar")
-            InsertMenuItem("Handcrafted Iced Caramel Macchiato", "Beverages", 4.5, 4, "Double espresso shot, chilled whole milk, and caramel drizzle")
-            InsertMenuItem("San Pellegrino Sparkling Water (750ml)", "Beverages", 3.5, 2, "Imported Italian sparkling mineral water")
-
-            ' Sample active order to immediately demonstrate real-time status and wait time calculation
             InsertSampleOrder()
-
         Catch ex As Exception
-            ' Ignore seeding duplicates
         End Try
     End Sub
 
+    Private Sub SeedMenuItems()
+        Try
+            ' STARTERS
+            InsertMenuItem("Veg Samosa (2 pcs)", "Starters", 60, 10, "Crispy golden pastry stuffed with spiced potato and peas, served with mint chutney", "Potato, Green Peas, Flour, Cumin, Coriander, Ginger, Chilli, Oil", "Deep-fry stuffed pastry until golden brown; serve with chutney")
+            InsertMenuItem("Paneer Tikka", "Starters", 220, 18, "Cubes of fresh cottage cheese marinated in tandoor spices and charcoal-grilled", "Paneer, Yoghurt, Ginger-Garlic Paste, Tandoori Masala, Bell Peppers, Onion, Lemon", "Marinate paneer overnight; skewer and grill in tandoor at high heat")
+            InsertMenuItem("Onion Bhaji", "Starters", 90, 8, "Crispy chickpea-battered onion fritters with green chilli and coriander", "Onion, Besan (Chickpea Flour), Green Chilli, Coriander, Turmeric, Chaat Masala", "Mix batter, fold in onion slices, deep-fry until crisp")
+            InsertMenuItem("Chicken Seekh Kebab", "Starters", 280, 20, "Minced spiced chicken moulded on skewers and grilled in tandoor oven", "Minced Chicken, Onion, Green Chilli, Ginger, Garlic, Garam Masala, Coriander", "Mix spiced mince, wrap on skewers, grill in tandoor 12-15 minutes")
+            InsertMenuItem("Aloo Tikki Chaat", "Starters", 110, 12, "Spiced mashed potato patties topped with yoghurt, tamarind, and sev", "Potato, Chickpeas, Yoghurt, Tamarind Chutney, Mint Chutney, Sev, Chaat Masala", "Pan-fry potato patties; assemble with toppings just before serving")
+
+            ' MAINS
+            InsertMenuItem("Butter Chicken (Murgh Makhani)", "Mains", 340, 22, "Tender chicken in a rich tomato-butter-cream sauce", "Chicken, Tomato Puree, Butter, Cream, Onion, Ginger-Garlic, Kashmiri Chilli, Kasoori Methi", "Marinate and grill chicken; simmer in makhani gravy; finish with cream")
+            InsertMenuItem("Dal Makhani", "Mains", 240, 25, "Black lentils slow-cooked overnight with butter, cream, and secret spices", "Black Urad Dal, Kidney Beans, Butter, Cream, Tomato, Onion, Garam Masala", "Soak dal overnight; pressure cook; simmer for 4 hours with butter")
+            InsertMenuItem("Palak Paneer", "Mains", 260, 18, "Fresh cottage cheese in a velvety spinach and spice gravy", "Paneer, Spinach, Onion, Tomato, Cream, Ginger-Garlic, Cumin, Garam Masala", "Blanch and puree spinach; cook with spices; add paneer cubes")
+            InsertMenuItem("Lamb Rogan Josh", "Mains", 390, 30, "Tender slow-braised lamb in a bold Kashmiri spice and yoghurt gravy", "Lamb, Yoghurt, Kashmiri Chilli, Fennel, Ginger, Garlic, Cloves, Cardamom", "Brown lamb; add whole spices; slow braise in yoghurt sauce 45 min")
+            InsertMenuItem("Chicken Biryani", "Mains", 360, 28, "Aromatic basmati rice slow-cooked with marinated chicken (Dum style)", "Basmati Rice, Chicken, Onion, Saffron, Mint, Yoghurt, Biryani Masala, Ghee", "Layer marinated chicken with par-cooked rice; seal and dum cook 25 min")
+            InsertMenuItem("Chole Bhature", "Mains", 180, 20, "Tangy chickpea curry served with fluffy deep-fried bread", "Chickpeas, Tomato, Onion, Ginger, Garlic, Chole Masala, Amchur, Bhature Dough", "Pressure cook chickpeas in spicy gravy; serve with fresh hot bhature")
+            InsertMenuItem("Fish Masala Curry", "Mains", 380, 22, "Coastal spiced fish curry in tangy coconut-tamarind masala", "Fresh Fish, Coconut Milk, Tamarind, Tomato, Onion, Mustard, Curry Leaves, Kokum", "Fry fish in spiced paste; simmer in coconut-tamarind gravy 15 min")
+            InsertMenuItem("Veg Thali", "Mains", 220, 20, "Complete Indian meal: 2 curries, dal, rice, roti, raita, pickle, papad", "Seasonal Vegetables, Dal, Basmati Rice, Wheat Flour, Yoghurt, Pickle", "Prepare all components fresh; assemble on stainless steel thali plate")
+
+            ' BREADS
+            InsertMenuItem("Garlic Naan", "Breads", 60, 8, "Soft leavened bread topped with garlic butter and coriander, baked in tandoor", "Maida, Yeast, Yoghurt, Milk, Garlic, Butter, Coriander", "Ferment dough; top with garlic butter; bake in tandoor 4-5 minutes")
+            InsertMenuItem("Laccha Paratha", "Breads", 55, 10, "Multi-layered flaky whole wheat bread, cooked on a cast-iron tawa with ghee", "Whole Wheat Flour, Ghee, Water, Salt", "Roll layered dough; cook on tawa with ghee until golden flaky layers form")
+            InsertMenuItem("Puri (3 pcs)", "Breads", 50, 6, "Small puffed deep-fried bread, served with bhaji or curry", "Wheat Flour, Salt, Oil", "Knead stiff dough; roll small rounds; deep-fry until golden and puffed")
+
+            ' RICE
+            InsertMenuItem("Steamed Basmati Rice", "Rice", 90, 12, "Aged long-grain basmati rice, perfectly steamed and fragrant", "Basmati Rice, Water, Salt", "Wash and soak rice; boil with salt; drain and steam finish")
+            InsertMenuItem("Jeera Rice", "Rice", 120, 15, "Fragrant cumin-tempered basmati rice cooked with whole spices", "Basmati Rice, Cumin Seeds, Ghee, Bay Leaf, Cloves, Salt", "Temper cumin in ghee; add rice; cook in spiced water until fluffy")
+
+            ' DESSERTS
+            InsertMenuItem("Gulab Jamun (2 pcs)", "Desserts", 90, 5, "Soft milk-solid dumplings soaked in rose and cardamom sugar syrup", "Khoya, Maida, Milk, Sugar, Rose Water, Cardamom, Saffron", "Shape khoya dough balls; deep-fry on low heat; soak in warm syrup")
+            InsertMenuItem("Rasmalai (2 pcs)", "Desserts", 110, 8, "Soft chenna dumplings floating in chilled saffron-cardamom milk", "Chenna, Sugar, Milk, Saffron, Cardamom, Pistachios, Rose Water", "Cook chenna discs in syrup; simmer in reduced saffron milk; chill")
+            InsertMenuItem("Kheer (Rice Pudding)", "Desserts", 100, 15, "Creamy slow-cooked rice pudding with saffron, cardamom, and dry fruits", "Basmati Rice, Full Cream Milk, Sugar, Saffron, Cardamom, Cashews, Almonds", "Simmer rice in milk on low heat 30 min until thick; add sugar and dry fruits")
+            InsertMenuItem("Kulfi Falooda", "Desserts", 130, 5, "Traditional Indian ice cream with rose syrup, basil seeds, and vermicelli", "Kulfi (Cream, Sugar, Cardamom, Pistachio), Rose Syrup, Basil Seeds, Falooda Sev", "Unmould kulfi; assemble with soaked basil seeds, falooda, rose syrup")
+
+            ' BEVERAGES
+            InsertMenuItem("Masala Chai", "Beverages", 40, 5, "Spiced Indian milk tea with ginger, cardamom, and cinnamon", "Tea Leaves, Milk, Ginger, Cardamom, Cinnamon, Sugar", "Boil spices in water; add tea leaves; add milk; strain and serve hot")
+            InsertMenuItem("Mango Lassi", "Beverages", 90, 4, "Thick chilled yoghurt drink blended with Alphonso mango pulp", "Fresh Yoghurt, Alphonso Mango Pulp, Sugar, Cardamom, Saffron, Ice", "Blend yoghurt, mango pulp and spices; serve chilled with ice")
+            InsertMenuItem("Fresh Lime Soda", "Beverages", 60, 3, "Refreshing fresh lime juice with soda water - sweet, salty or both", "Fresh Lime, Soda Water, Sugar Syrup, Black Salt, Ice", "Squeeze fresh lime; mix with soda; add sweetener or salt as preferred")
+            InsertMenuItem("Rooh Afza Sharbat", "Beverages", 70, 3, "Chilled rose water sherbet drink with basil seeds and chilled milk", "Rooh Afza Syrup, Chilled Milk, Basil Seeds (Sabja), Ice", "Mix Rooh Afza with chilled milk; add soaked basil seeds; serve over ice")
+            InsertMenuItem("Fresh Coconut Water", "Beverages", 80, 2, "Tender green coconut served fresh with straw - naturally refreshing", "Green Coconut", "Select fresh tender coconut; serve with straw; scoop malai on request")
+        Catch ex As Exception
+        End Try
+    End Sub
+
+    Private Sub SeedCustomers()
+        Try
+            InsertCustomerRecord("Ananya Krishnan", "+91-94440-11223", "ananya.k@gmail.com", "12, Anna Nagar, 3rd Street", "Chennai", 5, 2400, "Regular - prefers less spicy; vegetarian")
+            InsertCustomerRecord("Vikram Rajan", "+91-98849-55667", "vikram.rajan@outlook.com", "45, T Nagar, Panagal Park Road", "Chennai", 3, 1800, "Likes Chicken Biryani; family of 4")
+            InsertCustomerRecord("Deepa Subramaniam", "+91-99400-33445", "deepa.sub@yahoo.co.in", "8, Adyar Main Road", "Chennai", 8, 5600, "VIP; allergy to nuts; prefers window table")
+            InsertCustomerRecord("Karthik Murugan", "+91-87540-22113", "", "67, Velachery Main Road", "Chennai", 2, 950, "Jain food required (no onion/garlic)")
+            InsertCustomerRecord("Meenakshi Pillai", "+91-96005-78901", "meenakshi.p@hotmail.com", "23, Besant Nagar, ECR Road", "Chennai", 12, 8200, "Loyal customer since 2019; birthday in March")
+            InsertCustomerRecord("Rohan Mehta", "+91-91760-44332", "rohan.mehta@gmail.com", "102, Nungambakkam High Road", "Chennai", 1, 450, "New customer; visited once; online booking")
+            InsertCustomerRecord("Lakshmi Venkataraman", "+91-98410-56789", "", "34, Mylapore, R K Mutt Road", "Chennai", 6, 3700, "Prefers vegetarian; loves Rasmalai; Table 3")
+            InsertCustomerRecord("Sanjay Iyer", "+91-94444-87654", "sanjay.iyer@corporate.in", "56, Guindy Industrial Estate", "Chennai", 4, 6800, "Corporate client; books Table 6 for team lunches")
+        Catch ex As Exception
+        End Try
+    End Sub
+
+    Private Sub SyncMenuRecipes()
+        Try
+            UpdateItemRecipeIfEmpty("Butter Chicken (Murgh Makhani)", "Chicken, Tomato Puree, Butter, Cream, Onion, Ginger-Garlic, Kashmiri Chilli, Kasoori Methi", "Marinate and grill chicken; simmer in makhani gravy; finish with cream")
+            UpdateItemRecipeIfEmpty("Dal Makhani", "Black Urad Dal, Kidney Beans, Butter, Cream, Tomato, Onion, Garam Masala", "Soak dal overnight; pressure cook; simmer for 4 hours with butter")
+            UpdateItemRecipeIfEmpty("Paneer Tikka", "Paneer, Yoghurt, Ginger-Garlic Paste, Tandoori Masala, Bell Peppers, Onion, Lemon", "Marinate paneer overnight; skewer and grill in tandoor at high heat")
+            UpdateItemRecipeIfEmpty("Chicken Biryani", "Basmati Rice, Chicken, Onion, Saffron, Mint, Yoghurt, Biryani Masala, Ghee", "Layer marinated chicken with par-cooked rice; seal and dum cook 25 min")
+            UpdateItemRecipeIfEmpty("Veg Samosa (2 pcs)", "Potato, Green Peas, Flour, Cumin, Coriander, Ginger, Chilli, Oil", "Deep-fry stuffed pastry until golden brown; serve with chutney")
+            UpdateItemRecipeIfEmpty("Garlic Naan", "Maida, Yeast, Yoghurt, Milk, Garlic, Butter, Coriander", "Ferment dough; top with garlic butter; bake in tandoor 4-5 minutes")
+            UpdateItemRecipeIfEmpty("Palak Paneer", "Paneer, Spinach, Onion, Tomato, Cream, Ginger-Garlic, Cumin, Garam Masala", "Blanch and puree spinach; cook with spices; add paneer cubes")
+            UpdateItemRecipeIfEmpty("Gulab Jamun (2 pcs)", "Khoya, Maida, Milk, Sugar, Rose Water, Cardamom, Saffron", "Shape khoya dough balls; deep-fry on low heat; soak in warm syrup")
+        Catch
+        End Try
+    End Sub
+
+    Private Sub UpdateItemRecipeIfEmpty(name As String, ingredients As String, recipe As String)
+        Try
+            Dim cmd As New OleDbCommand("UPDATE tblMenuItems SET Ingredients = @ing, Recipe = @rec WHERE ItemName = @nm AND (Ingredients IS NULL OR Ingredients = '')", cn)
+            cmd.Parameters.AddWithValue("@ing", ingredients)
+            cmd.Parameters.AddWithValue("@rec", recipe)
+            cmd.Parameters.AddWithValue("@nm", name)
+            cmd.ExecuteNonQuery()
+        Catch
+        End Try
+    End Sub
+
+    Private Function GetStaffIDByUsername(username As String) As Integer
+        Try
+            Dim cmd As New OleDbCommand("SELECT StaffID FROM tblStaff WHERE UserName = @un", cn)
+            cmd.Parameters.AddWithValue("@un", username)
+            Dim result As Object = cmd.ExecuteScalar()
+            If result IsNot Nothing Then Return Convert.ToInt32(result)
+        Catch
+        End Try
+        Return 0
+    End Function
+
     Private Sub InsertStaffRecord(un As String, pw As String, acc As Integer, fn As String, ro As String, ph As String, sal As Double)
-        Dim cmd As New OleDbCommand("INSERT INTO tblStaff (UserName, UnPassword, AccessLevel, FullName, Role, Phone, Salary) " &
-                                    "VALUES (@un, @pw, @acc, @fn, @ro, @ph, @sal)", cn)
+        Dim cmd As New OleDbCommand("INSERT INTO tblStaff (UserName, UnPassword, AccessLevel, FullName, Role, Phone, Salary) VALUES (@un, @pw, @acc, @fn, @ro, @ph, @sal)", cn)
         cmd.Parameters.AddWithValue("@un", un)
         cmd.Parameters.AddWithValue("@pw", pw)
         cmd.Parameters.AddWithValue("@acc", acc)
@@ -248,8 +254,7 @@ Module ModMain
     End Sub
 
     Private Sub InsertTableRecord(num As Integer, cap As Integer, stat As String, wId As Integer, wName As String)
-        Dim cmd As New OleDbCommand("INSERT INTO tblTables (TableNumber, Capacity, TableStatus, AssignedWaiterID, AssignedWaiterName) " &
-                                    "VALUES (@num, @cap, @stat, @wid, @wname)", cn)
+        Dim cmd As New OleDbCommand("INSERT INTO tblTables (TableNumber, Capacity, TableStatus, AssignedWaiterID, AssignedWaiterName) VALUES (@num, @cap, @stat, @wid, @wname)", cn)
         cmd.Parameters.AddWithValue("@num", num)
         cmd.Parameters.AddWithValue("@cap", cap)
         cmd.Parameters.AddWithValue("@stat", stat)
@@ -258,69 +263,70 @@ Module ModMain
         cmd.ExecuteNonQuery()
     End Sub
 
-    Private Sub InsertMenuItem(name As String, cat As String, price As Double, prepMins As Integer, desc As String)
-        Dim cmd As New OleDbCommand("INSERT INTO tblMenuItems (ItemName, Category, Price, PrepTimeMinutes, Description) " &
-                                    "VALUES (@name, @cat, @price, @prep, @desc)", cn)
+    Private Sub InsertMenuItem(name As String, cat As String, price As Double, prepMins As Integer, desc As String, Optional ingredients As String = "", Optional recipe As String = "")
+        Dim cmd As New OleDbCommand("INSERT INTO tblMenuItems (ItemName, Category, Price, PrepTimeMinutes, Description, Ingredients, Recipe) VALUES (@name, @cat, @price, @prep, @desc, @ing, @rec)", cn)
         cmd.Parameters.AddWithValue("@name", name)
         cmd.Parameters.AddWithValue("@cat", cat)
         cmd.Parameters.AddWithValue("@price", price)
         cmd.Parameters.AddWithValue("@prep", prepMins)
         cmd.Parameters.AddWithValue("@desc", desc)
+        cmd.Parameters.AddWithValue("@ing", ingredients)
+        cmd.Parameters.AddWithValue("@rec", recipe)
         cmd.ExecuteNonQuery()
+    End Sub
+
+    Private Sub InsertCustomerRecord(name As String, phone As String, email As String, address As String, city As String, visits As Integer, totalSpent As Double, notes As String)
+        Try
+            Dim cmd As New OleDbCommand("INSERT INTO tblCustomers (CustomerName, Phone, Email, Address, City, VisitCount, TotalSpent, RegisteredOn, Notes) VALUES (@nm, @ph, @em, @ad, @ci, @vi, @ts, @ro, @nt)", cn)
+            cmd.Parameters.AddWithValue("@nm", name)
+            cmd.Parameters.AddWithValue("@ph", phone)
+            cmd.Parameters.AddWithValue("@em", email)
+            cmd.Parameters.AddWithValue("@ad", address)
+            cmd.Parameters.AddWithValue("@ci", city)
+            cmd.Parameters.AddWithValue("@vi", visits)
+            cmd.Parameters.AddWithValue("@ts", totalSpent)
+            cmd.Parameters.AddWithValue("@ro", DateTime.Now.AddDays(-visits * 15))
+            cmd.Parameters.AddWithValue("@nt", notes)
+            cmd.ExecuteNonQuery()
+        Catch
+        End Try
     End Sub
 
     Private Sub InsertSampleOrder()
-        ' Order placed 6 minutes ago for Table 1, currently Preparing
-        Dim orderTime As DateTime = DateTime.Now.AddMinutes(-6)
-        Dim cmd As New OleDbCommand("INSERT INTO tblOrders (TableNumber, CustomerName, WaiterID, WaiterName, OrderStatus, OrderTime, EstWaitMinutes, TotalAmount, Notes) " &
-                                    "VALUES (@tab, @cust, @wid, @wname, @stat, @otime, @wait, @tot, @notes)", cn)
+        Dim orderTime As DateTime = DateTime.Now.AddMinutes(-8)
+        Dim cmd As New OleDbCommand("INSERT INTO tblOrders (TableNumber, CustomerName, WaiterID, WaiterName, OrderStatus, OrderTime, EstWaitMinutes, TotalAmount, Notes) VALUES (@tab, @cust, @wid, @wname, @stat, @otime, @wait, @tot, @notes)", cn)
         cmd.Parameters.AddWithValue("@tab", 1)
-        cmd.Parameters.AddWithValue("@cust", "Guest Table 1")
-        cmd.Parameters.AddWithValue("@wid", 2)
-        cmd.Parameters.AddWithValue("@wname", "John Smith")
+        cmd.Parameters.AddWithValue("@cust", "Vikram Rajan")
+        cmd.Parameters.AddWithValue("@wid", GetStaffIDByUsername("waiter1"))
+        cmd.Parameters.AddWithValue("@wname", "Suresh Kumar")
         cmd.Parameters.AddWithValue("@stat", "Preparing in Kitchen")
         cmd.Parameters.AddWithValue("@otime", orderTime)
-        cmd.Parameters.AddWithValue("@wait", 18)
-        cmd.Parameters.AddWithValue("@tot", 35.0)
-        cmd.Parameters.AddWithValue("@notes", "Steak cooked medium-rare, no dressing on salad")
+        cmd.Parameters.AddWithValue("@wait", 22)
+        cmd.Parameters.AddWithValue("@tot", 700.0)
+        cmd.Parameters.AddWithValue("@notes", "Dal Makhani extra spicy; Biryani full portion; no onion in raita")
         cmd.ExecuteNonQuery()
     End Sub
 
-    ''' <summary>
-    ''' Encrypts plain text string to Base64 UTF-8 (Consistent with HolyScrap architecture)
-    ''' </summary>
     Public Function Encrypt(PlainText As String) As String
-        Dim CipherText As String = PlainText
-        If String.IsNullOrEmpty(PlainText) Then
-            Return ""
-        Else
-            Dim dat As Byte() = Encoding.UTF8.GetBytes(PlainText)
-            CipherText = Convert.ToBase64String(dat)
-        End If
-        Return CipherText
+        If String.IsNullOrEmpty(PlainText) Then Return ""
+        Dim dat As Byte() = Encoding.UTF8.GetBytes(PlainText)
+        Return Convert.ToBase64String(dat)
     End Function
 
-    ''' <summary>
-    ''' Decrypts Base64 UTF-8 cipher text back into plain text string
-    ''' </summary>
     Public Function Decrypt(CipherText As String) As String
-        Dim PlainText As String = CipherText
-        If String.IsNullOrEmpty(CipherText) Then
-            Return ""
-        Else
-            Try
-                Dim uData As Byte() = Convert.FromBase64String(CipherText)
-                PlainText = Encoding.UTF8.GetString(uData)
-            Catch
-                PlainText = CipherText
-            End Try
-        End If
-        Return PlainText
+        If String.IsNullOrEmpty(CipherText) Then Return ""
+        Try
+            Dim uData As Byte() = Convert.FromBase64String(CipherText)
+            Return Encoding.UTF8.GetString(uData)
+        Catch
+            Return CipherText
+        End Try
     End Function
 
-    ''' <summary>
-    ''' Resets the current login session
-    ''' </summary>
+    Public Function FormatRupees(amount As Double) As String
+        Return Chr(8377) & amount.ToString("N0")
+    End Function
+
     Public Sub LogOut()
         LogedIn = False
         CurrentUserID = -1

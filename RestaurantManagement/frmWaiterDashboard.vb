@@ -3,6 +3,7 @@ Imports System.Data.OleDb
 Public Class frmWaiterDashboard
 
     Private Sub frmWaiterDashboard_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        Me.Text = "Spice Garden - Waiter Service Station"
         lblWaiterName.Text = "Waiter Service Station | " & CurrentUserFullName
         LoadMyTables()
         LoadMyOrders()
@@ -46,7 +47,7 @@ Public Class frmWaiterDashboard
         Try
             Dim dt As New DataTable()
             Dim cmd As New OleDbCommand("SELECT OrderID, TableNumber, CustomerName, OrderStatus, OrderTime, EstWaitMinutes, TotalAmount " &
-                                        "FROM tblOrders WHERE WaiterID = @wid ORDER BY OrderID DESC", cn)
+                                        "FROM tblOrders WHERE WaiterID = @wid OR TableNumber IN (SELECT TableNumber FROM tblTables WHERE AssignedWaiterID = @wid) ORDER BY OrderID DESC", cn)
             cmd.Parameters.AddWithValue("@wid", CurrentUserID)
             Dim da As New OleDbDataAdapter(cmd)
             da.Fill(dt)
@@ -59,8 +60,7 @@ Public Class frmWaiterDashboard
             If dgvOrders.Columns.Contains("OrderTime") Then dgvOrders.Columns("OrderTime").HeaderText = "Time Placed"
             If dgvOrders.Columns.Contains("EstWaitMinutes") Then dgvOrders.Columns("EstWaitMinutes").HeaderText = "Wait (Mins)"
             If dgvOrders.Columns.Contains("TotalAmount") Then
-                dgvOrders.Columns("TotalAmount").HeaderText = "Total ($)"
-                dgvOrders.Columns("TotalAmount").DefaultCellStyle.Format = "c"
+                dgvOrders.Columns("TotalAmount").HeaderText = "Total (Rs.)"
             End If
 
         Catch ex As Exception
@@ -81,23 +81,33 @@ Public Class frmWaiterDashboard
         If Not DbConnect() Then Return
         Try
             Dim dt As New DataTable()
-            Dim cmd As New OleDbCommand("SELECT ItemName, Quantity, UnitPrice, SubTotal, ItemStatus FROM tblOrderItems WHERE OrderID = @oid", cn)
+            Dim cmd As New OleDbCommand("SELECT ItemName, Quantity, UnitPrice, SubTotal, ItemStatus, Customization FROM tblOrderItems WHERE OrderID = @oid", cn)
             cmd.Parameters.AddWithValue("@oid", orderID)
             Dim da As New OleDbDataAdapter(cmd)
-            da.Fill(dt)
+            Try
+                da.Fill(dt)
+            Catch
+                ' Fallback if Customization column is not present in older schema
+                Dim cmd2 As New OleDbCommand("SELECT ItemName, Quantity, UnitPrice, SubTotal, ItemStatus FROM tblOrderItems WHERE OrderID = @oid", cn)
+                cmd2.Parameters.AddWithValue("@oid", orderID)
+                Dim da2 As New OleDbDataAdapter(cmd2)
+                da2.Fill(dt)
+            End Try
             dgvOrderItems.DataSource = dt
 
             If dgvOrderItems.Columns.Contains("ItemName") Then dgvOrderItems.Columns("ItemName").HeaderText = "Dish"
             If dgvOrderItems.Columns.Contains("Quantity") Then dgvOrderItems.Columns("Quantity").HeaderText = "Qty"
             If dgvOrderItems.Columns.Contains("UnitPrice") Then
-                dgvOrderItems.Columns("UnitPrice").HeaderText = "Price"
-                dgvOrderItems.Columns("UnitPrice").DefaultCellStyle.Format = "c"
+                dgvOrderItems.Columns("UnitPrice").HeaderText = "Price (Rs.)"
             End If
             If dgvOrderItems.Columns.Contains("SubTotal") Then
-                dgvOrderItems.Columns("SubTotal").HeaderText = "Subtotal"
-                dgvOrderItems.Columns("SubTotal").DefaultCellStyle.Format = "c"
+                dgvOrderItems.Columns("SubTotal").HeaderText = "Subtotal (Rs.)"
             End If
             If dgvOrderItems.Columns.Contains("ItemStatus") Then dgvOrderItems.Columns("ItemStatus").HeaderText = "Item Status"
+            If dgvOrderItems.Columns.Contains("Customization") Then
+                dgvOrderItems.Columns("Customization").HeaderText = "Customer Wish / Customization"
+                dgvOrderItems.Columns("Customization").Width = 200
+            End If
         Catch ex As Exception
             ' Ignore details error
         Finally

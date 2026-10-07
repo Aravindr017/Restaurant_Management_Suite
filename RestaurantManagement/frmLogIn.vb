@@ -1,14 +1,65 @@
 Imports System.Data.OleDb
+Imports System.Text.RegularExpressions
 
 Public Class frmLogIn
 
     Private Sub frmLogIn_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        Me.Text = "Spice Garden - Staff & Customer Portal"
         ' Ensure the database tables and seed records are prepared
         InitializeDatabase()
         ClearLogInFields()
+        ' Populate table selector from DB
+        PopulateTableSelector()
         If cboTableSelect.Items.Count > 0 Then
             cboTableSelect.SelectedIndex = 0
         End If
+    End Sub
+
+    Private Sub PopulateTableSelector()
+        If Not DbConnect() Then
+            If cboTableSelect.Items.Count = 0 Then
+                For i As Integer = 1 To 6
+                    cboTableSelect.Items.Add("Table " & i)
+                Next
+            End If
+            Return
+        End If
+
+        Try
+            Dim cmd As New OleDbCommand("SELECT TableNumber, Capacity, TableStatus FROM tblTables ORDER BY TableNumber ASC", cn)
+            Dim reader As OleDbDataReader = cmd.ExecuteReader()
+            Dim hasRows As Boolean = False
+            Dim list As New List(Of String)()
+            While reader.Read()
+                hasRows = True
+                Dim tNum As Integer = Convert.ToInt32(reader("TableNumber"))
+                Dim cap As Integer = Convert.ToInt32(reader("Capacity"))
+                Dim stat As String = reader("TableStatus").ToString()
+                list.Add("Table " & tNum & " (" & cap & " seats - " & stat & ")")
+            End While
+            reader.Close()
+
+            If hasRows Then
+                cboTableSelect.Items.Clear()
+                For Each item In list
+                    cboTableSelect.Items.Add(item)
+                Next
+            Else
+                If cboTableSelect.Items.Count = 0 Then
+                    For i As Integer = 1 To 6
+                        cboTableSelect.Items.Add("Table " & i)
+                    Next
+                End If
+            End If
+        Catch
+            If cboTableSelect.Items.Count = 0 Then
+                For i As Integer = 1 To 6
+                    cboTableSelect.Items.Add("Table " & i)
+                Next
+            End If
+        Finally
+            DbClose()
+        End Try
     End Sub
 
     Private Sub btnLogIn_Click(sender As Object, e As EventArgs) Handles btnLogIn.Click
@@ -45,9 +96,10 @@ Public Class frmLogIn
                 MessageBox.Show("Unknown staff role level: " & UserAccessLevel, "Role Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
             End If
 
-            ' Upon closing dashboard, return to login form
+            ' Upon closing dashboard, return to login form and refresh tables
             Me.Show()
             ClearLogInFields()
+            PopulateTableSelector()
         Else
             UserAccessLevel = 99
             LogedIn = False
@@ -55,28 +107,29 @@ Public Class frmLogIn
     End Sub
 
     ''' <summary>
-    ''' Recursively verifies the user's password with up to 3 failed retry attempts
+    ''' Recursively verifies the user's password with up to 3 failed retry attempts.
+    ''' UserPw = plain text typed by user; RetrievedPW = decrypted password from DB.
     ''' </summary>
     Public Function recursivePasswordCheck(AttemptCount As Integer, UserPw As String, RetrievedPW As String) As Boolean
+        ' Direct comparison: entered plain text vs decrypted stored password
         If UserPw = RetrievedPW Then
-            ' Authentication successful
             LogedIn = True
             Return True
         End If
 
-        ' Track failed attempt count (1st attempt failed = 1)
         Dim failedAttempts As Integer = AttemptCount + 1
         If failedAttempts >= 3 Then
-            MessageBox.Show("You have reached 3 failed login attempts. Access is temporarily locked.",
+            MessageBox.Show("You have reached 3 failed login attempts. Access is temporarily locked." & vbCrLf &
+                            "Default credentials: owner / admin123  |  waiter1 / waiter123",
                             "Security Notice", MessageBoxButtons.OK, MessageBoxIcon.Warning)
             LogedIn = False
             Return False
         End If
 
-        Dim newAttempt As String = InputBox("Invalid password. Please re-enter password." & vbCrLf &
-                                            "Attempt " & (failedAttempts + 1) & " of 3:", "Authentication Retry")
+        Dim newAttempt As String = InputBox("Incorrect password. Please re-enter your password." & vbCrLf &
+                                            "Attempt " & (failedAttempts + 1) & " of 3:", "Spice Garden - Authentication Retry")
         If String.IsNullOrEmpty(newAttempt) Then
-            ' User cancelled retry prompt
+            ' User cancelled the retry dialog
             LogedIn = False
             Return False
         End If
@@ -129,13 +182,25 @@ Public Class frmLogIn
         If cboTableSelect.SelectedIndex < 0 Then
             cboTableSelect.SelectedIndex = 0
         End If
-        SelectedTableNumber = cboTableSelect.SelectedIndex + 1
+
+        Dim tNum As Integer = cboTableSelect.SelectedIndex + 1
+        If cboTableSelect.SelectedItem IsNot Nothing Then
+            Dim selectedText As String = cboTableSelect.SelectedItem.ToString()
+            Dim m As Match = Regex.Match(selectedText, "\d+")
+            If m.Success Then
+                Integer.TryParse(m.Value, tNum)
+            End If
+        End If
+
+        SelectedTableNumber = tNum
         ActiveCustomerName = "Table " & SelectedTableNumber & " Guest"
 
         Me.Hide()
         Dim orderForm As New frmCustomerOrder()
         orderForm.ShowDialog()
         Me.Show()
+        ClearLogInFields()
+        PopulateTableSelector()
     End Sub
 
     Private Sub ClearLogInFields()
