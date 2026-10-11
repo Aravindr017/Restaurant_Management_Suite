@@ -28,14 +28,14 @@ Public Class frmStaffEdit
         End If
 
         If Not Double.TryParse(txtSalary.Text.Trim(), salVal) OrElse salVal < 0 Then
-            salVal = 28000
+            salVal = 26000
         End If
 
         If DbConnect() Then
             Try
                 ' Check if username already exists
-                Dim checkCmd As New OleDbCommand("SELECT COUNT(*) FROM tblStaff WHERE UserName = @un", cn)
-                checkCmd.Parameters.AddWithValue("@un", un)
+                Dim checkCmd As New OleDbCommand("SELECT COUNT(*) FROM tblStaff WHERE LCase(UserName) = @un", cn)
+                checkCmd.Parameters.AddWithValue("@un", un.ToLower())
                 Dim count As Integer = Convert.ToInt32(checkCmd.ExecuteScalar())
 
                 If count > 0 Then
@@ -55,7 +55,7 @@ Public Class frmStaffEdit
                 insCmd.Parameters.AddWithValue("@fn", fn)
                 insCmd.Parameters.AddWithValue("@ro", "Waiter")
                 insCmd.Parameters.AddWithValue("@ph", ph)
-                insCmd.Parameters.AddWithValue("@sal", salVal)
+                insCmd.Parameters.AddWithValue("@sal", CDec(salVal))
                 insCmd.ExecuteNonQuery()
 
                 MessageBox.Show("Waiter '" & fn & "' successfully added to the staff roster!", "Waiter Registered", MessageBoxButtons.OK, MessageBoxIcon.Information)

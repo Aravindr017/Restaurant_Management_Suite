@@ -521,7 +521,7 @@ Partial Class frmOwnerDashboard
         Me.lblTotalSalesValue.Name = "lblTotalSalesValue"
         Me.lblTotalSalesValue.Size = New System.Drawing.Size(75, 23)
         Me.lblTotalSalesValue.TabIndex = 4
-        Me.lblTotalSalesValue.Text = "Rs.0"
+        Me.lblTotalSalesValue.Text = "£0.00"
 
         ' lblTotalSalesTitle
         Me.lblTotalSalesTitle.AutoSize = True

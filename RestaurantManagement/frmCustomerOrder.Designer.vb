@@ -386,7 +386,7 @@ Partial Class frmCustomerOrder
         Me.lblTotalAmount.Name = "lblTotalAmount"
         Me.lblTotalAmount.Size = New System.Drawing.Size(150, 21)
         Me.lblTotalAmount.TabIndex = 0
-        Me.lblTotalAmount.Text = "Total Bill: Rs.0"
+        Me.lblTotalAmount.Text = "Total Bill: £0.00"
 
         ' lblEstWaitInfo
         Me.lblEstWaitInfo.AutoSize = True

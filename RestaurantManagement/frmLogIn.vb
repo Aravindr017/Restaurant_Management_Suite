@@ -15,7 +15,7 @@ Public Class frmLogIn
         End If
     End Sub
 
-    Private Sub PopulateTableSelector()
+    Public Sub PopulateTableSelector()
         If Not DbConnect() Then
             If cboTableSelect.Items.Count = 0 Then
                 For i As Integer = 1 To 6
@@ -62,6 +62,14 @@ Public Class frmLogIn
         End Try
     End Sub
 
+    Private Sub chkShowPassword_CheckedChanged(sender As Object, e As EventArgs) Handles chkShowPassword.CheckedChanged
+        If chkShowPassword.Checked Then
+            txtPassword.PasswordChar = ControlChars.NullChar
+        Else
+            txtPassword.PasswordChar = "*"c
+        End If
+    End Sub
+
     Private Sub btnLogIn_Click(sender As Object, e As EventArgs) Handles btnLogIn.Click
         Dim username As String = txtUserName.Text.Trim()
         Dim enteredPassword As String = txtPassword.Text.Trim()
@@ -72,6 +80,12 @@ Public Class frmLogIn
             Return
         End If
 
+        If String.IsNullOrEmpty(enteredPassword) Then
+            MessageBox.Show("Please enter your password.", "Input Required", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            txtPassword.Focus()
+            Return
+        End If
+
         ' Retrieve stored encrypted password and user info from tblStaff
         Dim retrievedPassword As String = GetStaffCredentials(username)
 
@@ -79,7 +93,7 @@ Public Class frmLogIn
             Return
         End If
 
-        ' Use recursive verification matching the academic requirement
+        ' Use recursive verification matching the academic recursion requirement
         If recursivePasswordCheck(0, enteredPassword, retrievedPassword) Then
             ClearLogInFields()
             Me.Hide()
@@ -120,14 +134,14 @@ Public Class frmLogIn
         Dim failedAttempts As Integer = AttemptCount + 1
         If failedAttempts >= 3 Then
             MessageBox.Show("You have reached 3 failed login attempts. Access is temporarily locked." & vbCrLf &
-                            "Default credentials: owner / admin123  |  waiter1 / waiter123",
-                            "Security Notice", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                            "Please contact your restaurant system administrator for assistance.",
+                            "Security Notice - Access Locked", MessageBoxButtons.OK, MessageBoxIcon.Warning)
             LogedIn = False
             Return False
         End If
 
         Dim newAttempt As String = InputBox("Incorrect password. Please re-enter your password." & vbCrLf &
-                                            "Attempt " & (failedAttempts + 1) & " of 3:", "Spice Garden - Authentication Retry")
+                                            "Attempt " & (failedAttempts + 1) & " of 3:", "Staff Authentication Retry")
         If String.IsNullOrEmpty(newAttempt) Then
             ' User cancelled the retry dialog
             LogedIn = False
@@ -146,11 +160,24 @@ Public Class frmLogIn
 
         If DbConnect() Then
             Try
-                Dim cmd As New OleDbCommand("SELECT StaffID, UserName, UnPassword, AccessLevel, FullName, Role FROM tblStaff WHERE UserName = @un", cn)
-                cmd.Parameters.AddWithValue("@un", usrName)
+                Dim cmd As New OleDbCommand("SELECT StaffID, UserName, UnPassword, AccessLevel, FullName, Role, IsApproved FROM tblStaff WHERE LCase(UserName) = @un", cn)
+                cmd.Parameters.AddWithValue("@un", usrName.Trim().ToLower())
                 Dim reader As OleDbDataReader = cmd.ExecuteReader()
 
                 If reader.Read() Then
+                    Dim isApproved As Integer = 1
+                    If Not IsDBNull(reader("IsApproved")) Then
+                        isApproved = Convert.ToInt32(reader("IsApproved"))
+                    End If
+
+                    If isApproved = 0 Then
+                        reader.Close()
+                        MessageBox.Show("Your account is pending owner approval." & vbCrLf &
+                                        "Please wait for the restaurant owner to approve your registration before logging in.",
+                                        "Account Pending Approval", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                        Return "USER_NOT_FOUND"
+                    End If
+
                     CurrentUserID = Convert.ToInt32(reader("StaffID"))
                     CurrentUserName = reader("UserName").ToString()
                     CurrentUserFullName = reader("FullName").ToString()
@@ -161,7 +188,8 @@ Public Class frmLogIn
                     Dim encPassword As String = reader("UnPassword").ToString()
                     plainPassword = Decrypt(encPassword)
                 Else
-                    MessageBox.Show("User '" & usrName & "' was not found in the staff registry.", "Login Failed", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                    MessageBox.Show("Staff user '" & usrName & "' was not found in the staff registry." & vbCrLf &
+                                    "Please check the username and try again.", "Login Failed", MessageBoxButtons.OK, MessageBoxIcon.Warning)
                 End If
 
                 reader.Close()
@@ -206,10 +234,16 @@ Public Class frmLogIn
     Private Sub ClearLogInFields()
         txtUserName.Text = ""
         txtPassword.Text = ""
+        If chkShowPassword IsNot Nothing Then chkShowPassword.Checked = False
     End Sub
 
     Private Sub btnExit_Click(sender As Object, e As EventArgs) Handles btnExit.Click
         Application.Exit()
+    End Sub
+
+    Private Sub btnStaffSignup_Click(sender As Object, e As EventArgs) Handles btnStaffSignup.Click
+        Dim signupForm As New frmStaffSignup()
+        signupForm.ShowDialog()
     End Sub
 
 End Class

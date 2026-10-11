@@ -54,10 +54,12 @@ Public Class frmCustomerOrder
         If dgvCart.Columns.Contains("ItemName") Then dgvCart.Columns("ItemName").HeaderText = "Dish"
         If dgvCart.Columns.Contains("Quantity") Then dgvCart.Columns("Quantity").HeaderText = "Qty"
         If dgvCart.Columns.Contains("UnitPrice") Then
-            dgvCart.Columns("UnitPrice").HeaderText = "Price (Rs.)"
+            dgvCart.Columns("UnitPrice").HeaderText = "Price (£)"
+            dgvCart.Columns("UnitPrice").DefaultCellStyle.Format = "£#,##0.00"
         End If
         If dgvCart.Columns.Contains("SubTotal") Then
-            dgvCart.Columns("SubTotal").HeaderText = "Subtotal (Rs.)"
+            dgvCart.Columns("SubTotal").HeaderText = "Subtotal (£)"
+            dgvCart.Columns("SubTotal").DefaultCellStyle.Format = "£#,##0.00"
         End If
         If dgvCart.Columns.Contains("Customization") Then
             dgvCart.Columns("Customization").HeaderText = "Customization"
@@ -87,7 +89,8 @@ Public Class frmCustomerOrder
             If dgvMenuCatalog.Columns.Contains("ItemName") Then dgvMenuCatalog.Columns("ItemName").HeaderText = "Dish Name"
             If dgvMenuCatalog.Columns.Contains("Category") Then dgvMenuCatalog.Columns("Category").HeaderText = "Category"
             If dgvMenuCatalog.Columns.Contains("Price") Then
-                dgvMenuCatalog.Columns("Price").HeaderText = "Price (Rs.)"
+                dgvMenuCatalog.Columns("Price").HeaderText = "Price (£)"
+                dgvMenuCatalog.Columns("Price").DefaultCellStyle.Format = "£#,##0.00"
             End If
             If dgvMenuCatalog.Columns.Contains("PrepTimeMinutes") Then dgvMenuCatalog.Columns("PrepTimeMinutes").HeaderText = "Prep Time (Min)"
             If dgvMenuCatalog.Columns.Contains("Description") Then dgvMenuCatalog.Columns("Description").HeaderText = "Description"
@@ -234,7 +237,7 @@ Public Class frmCustomerOrder
         Next
 
         Dim estWait As Integer = If(CartTable.Rows.Count > 0, maxPrepTime + 3, 0)
-        lblTotalAmount.Text = "Total Bill: Rs." & totalBill.ToString("N0")
+        lblTotalAmount.Text = "Total Bill: " & FormatCurrency(totalBill)
         lblEstWaitInfo.Text = "Est. Preparation Time: ~" & estWait & " mins (Kitchen queuing included)"
     End Sub
 
@@ -307,7 +310,7 @@ Public Class frmCustomerOrder
                 orderCmd.Parameters.AddWithValue("@stat", "Preparing in Kitchen")
                 orderCmd.Parameters.AddWithValue("@otime", DateTime.Now)
                 orderCmd.Parameters.AddWithValue("@wait", estWaitMins)
-                orderCmd.Parameters.AddWithValue("@tot", totalBill)
+                orderCmd.Parameters.AddWithValue("@tot", CDec(totalBill))
                 orderCmd.Parameters.AddWithValue("@notes", If(specialNotes.Length > 0, specialNotes.ToString().Trim(), "Ordered via table portal"))
                 orderCmd.ExecuteNonQuery()
 
@@ -325,8 +328,8 @@ Public Class frmCustomerOrder
                     itemCmd.Parameters.AddWithValue("@iid", Convert.ToInt32(r("ItemID")))
                     itemCmd.Parameters.AddWithValue("@iname", r("ItemName").ToString().TrimEnd("*"c).Trim())
                     itemCmd.Parameters.AddWithValue("@qty", Convert.ToInt32(r("Quantity")))
-                    itemCmd.Parameters.AddWithValue("@pr", Convert.ToDouble(r("UnitPrice")))
-                    itemCmd.Parameters.AddWithValue("@sub", Convert.ToDouble(r("SubTotal")))
+                    itemCmd.Parameters.AddWithValue("@pr", CDec(Convert.ToDouble(r("UnitPrice"))))
+                    itemCmd.Parameters.AddWithValue("@sub", CDec(Convert.ToDouble(r("SubTotal"))))
                     itemCmd.Parameters.AddWithValue("@stat", "Preparing in Kitchen")
                     itemCmd.Parameters.AddWithValue("@cust", r("Customization").ToString())
                     itemCmd.ExecuteNonQuery()
@@ -343,7 +346,7 @@ Public Class frmCustomerOrder
                 MessageBox.Show("Your order (Order #" & newOrderID & ") has been submitted to the kitchen!" & vbCrLf &
                                 "Estimated preparation time: ~" & estWaitMins & " minutes." & vbCrLf &
                                 "Assigned Waiter: " & waiterName & vbCrLf &
-                                "Total Amount: Rs." & totalBill.ToString("N0"),
+                                "Total Amount: " & FormatCurrency(totalBill),
                                 "Order Placed Successfully - Spice Garden", MessageBoxButtons.OK, MessageBoxIcon.Information)
 
                 CartTable.Rows.Clear()
@@ -382,8 +385,8 @@ Public Class frmCustomerOrder
                     insCmd.Parameters.AddWithValue("@ph", "")
                     insCmd.Parameters.AddWithValue("@em", "")
                     insCmd.Parameters.AddWithValue("@ad", "")
-                    insCmd.Parameters.AddWithValue("@ci", "Chennai")
-                    insCmd.Parameters.AddWithValue("@ts", orderAmount)
+                    insCmd.Parameters.AddWithValue("@ci", "London")
+                    insCmd.Parameters.AddWithValue("@ts", CDec(orderAmount))
                     insCmd.Parameters.AddWithValue("@ro", DateTime.Now)
                     insCmd.Parameters.AddWithValue("@nt", "Registered via Table #" & SelectedTableNumber)
                     insCmd.ExecuteNonQuery()
@@ -413,7 +416,7 @@ Public Class frmCustomerOrder
                 Dim totalBill As Double = Convert.ToDouble(reader("TotalAmount"))
                 Dim custName As String = reader("CustomerName").ToString()
 
-                lblOrderMeta.Text = "Order #" & CurrentActiveOrderID & " | " & custName & " | Table " & SelectedTableNumber & " | Waiter: " & waiterName & " | Total: Rs." & totalBill.ToString("N0")
+                lblOrderMeta.Text = "Order #" & CurrentActiveOrderID & " | " & custName & " | Table " & SelectedTableNumber & " | Waiter: " & waiterName & " | Total: " & FormatCurrency(totalBill)
 
                 lblStatusBadge.Text = status
                 Select Case status
@@ -496,8 +499,14 @@ Public Class frmCustomerOrder
 
             If dgvTrackedItems.Columns.Contains("ItemName") Then dgvTrackedItems.Columns("ItemName").HeaderText = "Dish Name"
             If dgvTrackedItems.Columns.Contains("Quantity") Then dgvTrackedItems.Columns("Quantity").HeaderText = "Qty"
-            If dgvTrackedItems.Columns.Contains("UnitPrice") Then dgvTrackedItems.Columns("UnitPrice").HeaderText = "Price (Rs.)"
-            If dgvTrackedItems.Columns.Contains("SubTotal") Then dgvTrackedItems.Columns("SubTotal").HeaderText = "Subtotal (Rs.)"
+            If dgvTrackedItems.Columns.Contains("UnitPrice") Then
+                dgvTrackedItems.Columns("UnitPrice").HeaderText = "Price (£)"
+                dgvTrackedItems.Columns("UnitPrice").DefaultCellStyle.Format = "£#,##0.00"
+            End If
+            If dgvTrackedItems.Columns.Contains("SubTotal") Then
+                dgvTrackedItems.Columns("SubTotal").HeaderText = "Subtotal (£)"
+                dgvTrackedItems.Columns("SubTotal").DefaultCellStyle.Format = "£#,##0.00"
+            End If
             If dgvTrackedItems.Columns.Contains("ItemStatus") Then dgvTrackedItems.Columns("ItemStatus").HeaderText = "Dish Status"
             If dgvTrackedItems.Columns.Contains("Customization") Then dgvTrackedItems.Columns("Customization").HeaderText = "Customization"
         Catch ex As Exception

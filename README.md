@@ -189,7 +189,7 @@ Stores the food and beverage catalog with recipe steps and ingredients.
 | `ItemID` | AUTOINCREMENT | Primary Key | Unique menu item ID |
 | `ItemName` | TEXT(100) | Not Null | Name of the dish |
 | `Category` | TEXT(50) | Not Null | `Starters`, `Mains`, `Breads`, `Rice`, `Desserts`, `Beverages` |
-| `Price` | CURRENCY | Not Null | Unit price in Indian Rupees (₹) |
+| `Price` | CURRENCY | Not Null | Unit price in British Pounds (£) |
 | `PrepTimeMinutes` | INTEGER | Not Null | Estimated kitchen preparation duration |
 | `Description` | TEXT(255) | | Culinary description and flavor profile |
 | `Ingredients` | TEXT(255) | | Detailed ingredient list for allergy & dietary checks |
@@ -219,7 +219,7 @@ Line items associated with each order header, including customer-specific custom
 | `ItemID` | INTEGER | | References `tblMenuItems(ItemID)` |
 | `ItemName` | TEXT(100) | | Dish name snapshot |
 | `Quantity` | INTEGER | | Units ordered |
-| `UnitPrice` | CURRENCY | | Unit price snapshot in Rupees (₹) |
+| `UnitPrice` | CURRENCY | | Unit price snapshot in British Pounds (£) |
 | `SubTotal` | CURRENCY | | Line subtotal (`Quantity * UnitPrice`) |
 | `ItemStatus` | TEXT(30) | | Kitchen status of specific dish item |
 | `Customization` | TEXT(255) | | Customer's specific wish (e.g., extra spicy, no onion, Jain style) |
@@ -230,12 +230,12 @@ Customer registry for loyalty tracking, dietary preferences, and visit history.
 | :--- | :--- | :--- | :--- |
 | `CustomerID` | AUTOINCREMENT | Primary Key | Unique customer ID |
 | `CustomerName` | TEXT(100) | Not Null | Customer's full name |
-| `Phone` | TEXT(50) | | Contact phone number (+91...) |
+| `Phone` | TEXT(50) | | Contact phone number (+44...) |
 | `Email` | TEXT(100) | | Email address |
-| `Address` | TEXT(255) | | Residential / office address in Chennai |
-| `City` | TEXT(100) | | City (default: Chennai) |
+| `Address` | TEXT(255) | | Street address (UK / International) |
+| `City` | TEXT(100) | | City (default: London) |
 | `VisitCount` | INTEGER | | Number of dining visits |
-| `TotalSpent` | CURRENCY | | Total dining expenditure in Rupees (₹) |
+| `TotalSpent` | CURRENCY | | Total dining expenditure in British Pounds (£) |
 | `RegisteredOn` | DATETIME | | Date and time customer was registered |
 | `Notes` | TEXT(255) | | Dietary preferences, allergies, VIP notes |
 
@@ -248,10 +248,11 @@ The database comes pre-seeded with sample records for immediate testing:
 ### Staff Accounts
 | Role | Username | Password | Full Name | Access Level |
 | :--- | :--- | :--- | :--- | :--- |
-| **Owner / Manager** | `owner` | `admin123` | Marco Bellini (Owner) | Level 1 (Full Admin) |
-| **Waiter 1** | `waiter1` | `waiter123` | John Smith | Level 2 (Assigned Tables 1 & 2) |
-| **Waiter 2** | `waiter2` | `waiter123` | Emily Davis | Level 2 (Assigned Tables 3 & 4) |
-| **Waiter 3** | `waiter3` | `waiter123` | Carlos Mendez | Level 2 (Assigned Tables 5 & 6) |
+| **Owner / Manager** | `owner` | `admin123` | James Sterling (Owner) | Level 1 (Full Admin) |
+| **Admin / Manager** | `admin` | `admin123` | System Administrator | Level 1 (Full Admin) |
+| **Head Waiter** | `waiter1` | `waiter123` | Oliver Smith | Level 2 (Assigned Tables 1 & 2) |
+| **Waiter 2** | `waiter2` | `waiter123` | Emily Davies | Level 2 (Assigned Tables 3 & 4) |
+| **Waiter 3** | `waiter3` | `waiter123` | Arjun Singh | Level 2 (Assigned Tables 5 & 6) |
 
 ### Table Testing
 - Tables **1 to 6** are available directly on the login screen under **Customer / Table Self-Service**.

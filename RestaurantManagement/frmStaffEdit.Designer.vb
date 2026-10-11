@@ -136,7 +136,7 @@ Partial Class frmStaffEdit
         Me.lblSalary.Name = "lblSalary"
         Me.lblSalary.Size = New System.Drawing.Size(92, 17)
         Me.lblSalary.TabIndex = 9
-        Me.lblSalary.Text = "Annual Salary:"
+        Me.lblSalary.Text = "Annual Salary (£):"
         '
         'txtSalary
         '
@@ -145,7 +145,7 @@ Partial Class frmStaffEdit
         Me.txtSalary.Name = "txtSalary"
         Me.txtSalary.Size = New System.Drawing.Size(265, 24)
         Me.txtSalary.TabIndex = 10
-        Me.txtSalary.Text = "28000"
+        Me.txtSalary.Text = "26000"
         '
         'btnSave
         '

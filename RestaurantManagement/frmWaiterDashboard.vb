@@ -60,7 +60,8 @@ Public Class frmWaiterDashboard
             If dgvOrders.Columns.Contains("OrderTime") Then dgvOrders.Columns("OrderTime").HeaderText = "Time Placed"
             If dgvOrders.Columns.Contains("EstWaitMinutes") Then dgvOrders.Columns("EstWaitMinutes").HeaderText = "Wait (Mins)"
             If dgvOrders.Columns.Contains("TotalAmount") Then
-                dgvOrders.Columns("TotalAmount").HeaderText = "Total (Rs.)"
+                dgvOrders.Columns("TotalAmount").HeaderText = "Total (£)"
+                dgvOrders.Columns("TotalAmount").DefaultCellStyle.Format = "£#,##0.00"
             End If
 
         Catch ex As Exception
@@ -98,10 +99,12 @@ Public Class frmWaiterDashboard
             If dgvOrderItems.Columns.Contains("ItemName") Then dgvOrderItems.Columns("ItemName").HeaderText = "Dish"
             If dgvOrderItems.Columns.Contains("Quantity") Then dgvOrderItems.Columns("Quantity").HeaderText = "Qty"
             If dgvOrderItems.Columns.Contains("UnitPrice") Then
-                dgvOrderItems.Columns("UnitPrice").HeaderText = "Price (Rs.)"
+                dgvOrderItems.Columns("UnitPrice").HeaderText = "Price (£)"
+                dgvOrderItems.Columns("UnitPrice").DefaultCellStyle.Format = "£#,##0.00"
             End If
             If dgvOrderItems.Columns.Contains("SubTotal") Then
-                dgvOrderItems.Columns("SubTotal").HeaderText = "Subtotal (Rs.)"
+                dgvOrderItems.Columns("SubTotal").HeaderText = "Subtotal (£)"
+                dgvOrderItems.Columns("SubTotal").DefaultCellStyle.Format = "£#,##0.00"
             End If
             If dgvOrderItems.Columns.Contains("ItemStatus") Then dgvOrderItems.Columns("ItemStatus").HeaderText = "Item Status"
             If dgvOrderItems.Columns.Contains("Customization") Then

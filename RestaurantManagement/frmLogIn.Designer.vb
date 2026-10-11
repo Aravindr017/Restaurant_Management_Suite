@@ -21,6 +21,7 @@ Partial Class frmLogIn
         Me.lblSubtitle = New System.Windows.Forms.Label()
         Me.lblTitle = New System.Windows.Forms.Label()
         Me.grpStaffLogin = New System.Windows.Forms.GroupBox()
+        Me.chkShowPassword = New System.Windows.Forms.CheckBox()
         Me.lblHint = New System.Windows.Forms.Label()
         Me.btnExit = New System.Windows.Forms.Button()
         Me.btnLogIn = New System.Windows.Forms.Button()
@@ -73,9 +74,11 @@ Partial Class frmLogIn
         '
         'grpStaffLogin
         '
+        Me.grpStaffLogin.Controls.Add(Me.chkShowPassword)
         Me.grpStaffLogin.Controls.Add(Me.lblHint)
         Me.grpStaffLogin.Controls.Add(Me.btnExit)
         Me.grpStaffLogin.Controls.Add(Me.btnLogIn)
+        Me.grpStaffLogin.Controls.Add(Me.btnStaffSignup)
         Me.grpStaffLogin.Controls.Add(Me.txtPassword)
         Me.grpStaffLogin.Controls.Add(Me.txtUserName)
         Me.grpStaffLogin.Controls.Add(Me.lblPassword)
@@ -83,40 +86,64 @@ Partial Class frmLogIn
         Me.grpStaffLogin.Font = New System.Drawing.Font("Segoe UI", 9.5!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.grpStaffLogin.Location = New System.Drawing.Point(25, 95)
         Me.grpStaffLogin.Name = "grpStaffLogin"
-        Me.grpStaffLogin.Size = New System.Drawing.Size(534, 215)
+        Me.grpStaffLogin.Size = New System.Drawing.Size(534, 250)
         Me.grpStaffLogin.TabIndex = 1
         Me.grpStaffLogin.TabStop = False
         Me.grpStaffLogin.Text = "Staff Authentication (Owner / Waiters)"
         '
+        'chkShowPassword
+        '
+        Me.chkShowPassword.AutoSize = True
+        Me.chkShowPassword.Font = New System.Drawing.Font("Segoe UI", 8.5!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.chkShowPassword.ForeColor = System.Drawing.Color.DimGray
+        Me.chkShowPassword.Location = New System.Drawing.Point(345, 112)
+        Me.chkShowPassword.Name = "chkShowPassword"
+        Me.chkShowPassword.Size = New System.Drawing.Size(107, 19)
+        Me.chkShowPassword.TabIndex = 7
+        Me.chkShowPassword.Text = "Show Password"
+        Me.chkShowPassword.UseVisualStyleBackColor = True
+        '
         'lblHint
         '
         Me.lblHint.AutoSize = True
-        Me.lblHint.Font = New System.Drawing.Font("Segoe UI", 8.0!, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.lblHint.Font = New System.Drawing.Font("Segoe UI", 8.5!, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.lblHint.ForeColor = System.Drawing.Color.DimGray
-        Me.lblHint.Location = New System.Drawing.Point(125, 120)
+        Me.lblHint.Location = New System.Drawing.Point(125, 113)
         Me.lblHint.Name = "lblHint"
-        Me.lblHint.Size = New System.Drawing.Size(325, 13)
+        Me.lblHint.Size = New System.Drawing.Size(197, 15)
         Me.lblHint.TabIndex = 6
-        Me.lblHint.Text = "Defaults: Owner = owner / admin123  |  Waiter = waiter1 / waiter123"
+        Me.lblHint.Text = "Authorized personnel sign-in portal"
         '
         'btnExit
         '
         Me.btnExit.BackColor = System.Drawing.Color.FromArgb(CType(CType(240, Byte), Integer), CType(CType(240, Byte), Integer), CType(CType(240, Byte), Integer))
         Me.btnExit.FlatStyle = System.Windows.Forms.FlatStyle.System
         Me.btnExit.Font = New System.Drawing.Font("Segoe UI", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.btnExit.Location = New System.Drawing.Point(340, 150)
+        Me.btnExit.Location = New System.Drawing.Point(340, 155)
         Me.btnExit.Name = "btnExit"
         Me.btnExit.Size = New System.Drawing.Size(110, 36)
         Me.btnExit.TabIndex = 5
         Me.btnExit.Text = "Exit System"
         Me.btnExit.UseVisualStyleBackColor = False
         '
+        ' btnStaffSignup
+        Me.btnStaffSignup = New System.Windows.Forms.Button()
+        Me.btnStaffSignup.FlatStyle = System.Windows.Forms.FlatStyle.System
+        Me.btnStaffSignup.Font = New System.Drawing.Font("Segoe UI", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.btnStaffSignup.ForeColor = System.Drawing.Color.FromArgb(30, 64, 175)
+        Me.btnStaffSignup.Location = New System.Drawing.Point(128, 203)
+        Me.btnStaffSignup.Name = "btnStaffSignup"
+        Me.btnStaffSignup.Size = New System.Drawing.Size(322, 32)
+        Me.btnStaffSignup.TabIndex = 8
+        Me.btnStaffSignup.Text = "Apply for a Job Here (Staff Sign-Up / New Employee)"
+        Me.btnStaffSignup.UseVisualStyleBackColor = True
+        '
         'btnLogIn
         '
         Me.btnLogIn.BackColor = System.Drawing.Color.FromArgb(CType(CType(33, Byte), Integer), CType(CType(150, Byte), Integer), CType(CType(83, Byte), Integer))
         Me.btnLogIn.FlatStyle = System.Windows.Forms.FlatStyle.System
         Me.btnLogIn.Font = New System.Drawing.Font("Segoe UI Semibold", 9.5!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.btnLogIn.Location = New System.Drawing.Point(128, 150)
+        Me.btnLogIn.Location = New System.Drawing.Point(128, 155)
         Me.btnLogIn.Name = "btnLogIn"
         Me.btnLogIn.Size = New System.Drawing.Size(195, 36)
         Me.btnLogIn.TabIndex = 4
@@ -167,7 +194,7 @@ Partial Class frmLogIn
         Me.grpCustomerOrder.Controls.Add(Me.cboTableSelect)
         Me.grpCustomerOrder.Controls.Add(Me.lblCustomerNote)
         Me.grpCustomerOrder.Font = New System.Drawing.Font("Segoe UI", 9.5!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.grpCustomerOrder.Location = New System.Drawing.Point(25, 325)
+        Me.grpCustomerOrder.Location = New System.Drawing.Point(25, 360)
         Me.grpCustomerOrder.Name = "grpCustomerOrder"
         Me.grpCustomerOrder.Size = New System.Drawing.Size(534, 130)
         Me.grpCustomerOrder.TabIndex = 2
@@ -217,10 +244,11 @@ Partial Class frmLogIn
         '
         'frmLogIn
         '
+        Me.AcceptButton = Me.btnLogIn
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.BackColor = System.Drawing.Color.FromArgb(CType(CType(245, Byte), Integer), CType(CType(247, Byte), Integer), CType(CType(250, Byte), Integer))
-        Me.ClientSize = New System.Drawing.Size(584, 475)
+        Me.ClientSize = New System.Drawing.Size(584, 510)
         Me.Controls.Add(Me.grpCustomerOrder)
         Me.Controls.Add(Me.grpStaffLogin)
         Me.Controls.Add(Me.pnlHeader)
@@ -228,7 +256,7 @@ Partial Class frmLogIn
         Me.MaximizeBox = False
         Me.Name = "frmLogIn"
         Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen
-        Me.Text = "Restaurant Management Suite - Sign In"
+        Me.Text = "Spice Garden - Staff & Customer Portal"
         Me.pnlHeader.ResumeLayout(False)
         Me.pnlHeader.PerformLayout()
         Me.grpStaffLogin.ResumeLayout(False)
@@ -245,11 +273,13 @@ Partial Class frmLogIn
     Friend WithEvents grpStaffLogin As GroupBox
     Friend WithEvents btnExit As Button
     Friend WithEvents btnLogIn As Button
+    Friend WithEvents btnStaffSignup As Button
     Friend WithEvents txtPassword As TextBox
     Friend WithEvents txtUserName As TextBox
     Friend WithEvents lblPassword As Label
     Friend WithEvents lblUserName As Label
     Friend WithEvents lblHint As Label
+    Friend WithEvents chkShowPassword As CheckBox
     Friend WithEvents grpCustomerOrder As GroupBox
     Friend WithEvents btnCustomerEnter As Button
     Friend WithEvents lblTablePrompt As Label
